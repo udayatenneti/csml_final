@@ -28,7 +28,19 @@ class PKLot(Dataset):
                 gold_label = self.xml_to_labels(os.path.join(path, xml))
                 if gold_label != -1:
                     image = Image.open(os.path.join(path, image_name))
-                    self.data.append( (to_tensor(image), gold_label, str(os.path.join(path, image_name))) )
+                    transform = transforms.Compose([
+                        transforms.Resize([256, 128]),
+                        transforms.ToTensor()
+                    ])
+                    img_tr = transform(image)
+                    mean, std = img_tr.mean([1, 2]), img_tr.std([1, 2])
+                    transform_norm = transforms.Compose([
+                        transforms.Resize([256, 128]),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean, std)
+                    ])
+                    img_normalized = transform_norm(image)
+                    self.data.append( (img_normalized, gold_label, str(os.path.join(path, image_name))) )
                 else:
                     print("GOLD_LABEL IS -1 FOR " + str(os.path.join(path, image_name)))
             print("finished path: " + path)

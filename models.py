@@ -65,7 +65,7 @@ class CNNClassifier(torch.nn.Module):
         self.bn3 = torch.nn.BatchNorm2d(30)
         self.pool = torch.nn.MaxPool2d(2, 2)
         # self.flatten = torch.nn.flatten()  # TODO: ADD IN!
-        self.fc1 = torch.nn.Linear(30 * 357 * 637, 20)
+        self.fc1 = torch.nn.Linear(30 * 30 * 14, 20)
         self.fc2 = torch.nn.Linear(20, 10)
         self.fc3 = torch.nn.Linear(10, n_output_channels)
 
@@ -79,7 +79,7 @@ class CNNClassifier(torch.nn.Module):
         output = self.pool(output)
         output = F.relu(self.bn3(self.conv3(output)))
         output = self.pool(output)
-        output = output.view(-1, 30 * 357 * 637)
+        output = output.view(-1, 30 * 30 * 14)
         output = F.relu(self.fc1(output))
         output = F.relu(self.fc2(output))
         output = F.relu(self.fc3(output))

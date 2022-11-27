@@ -79,7 +79,7 @@ def divide_dates_train_valid(camera_angle, percent_valid=0.3):
 
 
 
-def train(camera_angle, chunks):
+def train(camera_angle, chunks, lr):
     """
     doing something
     :return:
@@ -98,7 +98,7 @@ def train(camera_angle, chunks):
     valid_logger = tb.SummaryWriter(os.path.join("./", 'valid'))
 
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
     loss_func = torch.nn.NLLLoss()
 
     #train_section, valid_section = [_SECTION + x for x in _DATES_TRAIN]
@@ -180,12 +180,13 @@ def train(camera_angle, chunks):
         if valid_logger is None or train_logger is None:
             print('epoch %-3d \t acc = %0.3f \t val acc = %0.3f' % (epoch, avg_acc, avg_vacc))
         print('epoch %-3d \t acc = %0.3f \t val acc = %0.3f' % (epoch, avg_acc, avg_vacc))
-        save_model(model, name=camera_angle + "_stanford_trainall_1angle_1E-3_cnn.th")
-    save_model(model, name=camera_angle + "_stanford_trainall_1angle_1E-3_cnn.th")
+        save_model(model, name=camera_angle + "_stanford_trainall_1angle_" + str(lr) + "_cnn.th")
+    save_model(model, name=camera_angle + "_stanford_trainall_1angle_" + str(lr) + "_cnn.th")
 
 
 if __name__ == "__main__":
     args = _parse_args()
     camera_angle = args.angle
     chunks = args.chunks
-    train(camera_angle, chunks)
+    lr = args.lr
+    train(camera_angle, chunks, lr)

@@ -1,28 +1,28 @@
 import torch
 import torch.nn.functional as F
 
-class CNNClassifier2(torch.nn.Module):
+class CNNClassifierOLD(torch.nn.Module):
     def __init__(self, layers=[10,20,30], n_input_channels=3, n_output_channels=2, kernel_size=5):
         super().__init__()
 
-        linear_layers = []
-
-        c = n_input_channels
-        for l in layers:
-            linear_layers.append(torch.nn.Conv2d(c, l, kernel_size, stride=1, padding=kernel_size//2))
-            linear_layers.append(torch.nn.BatchNorm2d(l)) #TODO: affine=False ?
-            linear_layers.append(torch.nn.ReLU())
-            c = l
-        linear_layers.append(torch.nn.MaxPool2d(kernel_size))
-        self.network = torch.nn.Sequential(*linear_layers)
-
-        output_linear_layers = []
-        output_layers = layers[::-1]
-        output_layers.append(n_output_channels)
-        for i in range(len(output_layers) - 1):
-            output_linear_layers.append( torch.nn.Linear(output_layers[i], output_layers[i+1]) )
-            output_linear_layers.append(torch.nn.ReLU())
-        self.classifier = torch.nn.Sequential(*output_linear_layers)
+        # linear_layers = []
+        #
+        # c = n_input_channels
+        # for l in layers:
+        #     linear_layers.append(torch.nn.Conv2d(c, l, kernel_size, stride=1, padding=kernel_size//2))
+        #     linear_layers.append(torch.nn.BatchNorm2d(l)) #TODO: affine=False ?
+        #     linear_layers.append(torch.nn.ReLU())
+        #     c = l
+        # linear_layers.append(torch.nn.MaxPool2d(kernel_size))
+        # self.network = torch.nn.Sequential(*linear_layers)
+        #
+        # output_linear_layers = []
+        # output_layers = layers[::-1]
+        # output_layers.append(n_output_channels)
+        # for i in range(len(output_layers) - 1):
+        #     output_linear_layers.append( torch.nn.Linear(output_layers[i], output_layers[i+1]) )
+        #     output_linear_layers.append(torch.nn.ReLU())
+        # self.classifier = torch.nn.Sequential(*output_linear_layers)
         self.log_softmax = torch.nn.LogSoftmax()#dim=2)
 
         self.conv1 = torch.nn.Conv2d(in_channels=3, out_channels=12, kernel_size=5, stride=1, padding=1)
@@ -74,7 +74,9 @@ class CNNClassifier(torch.nn.Module):
     def forward(self, x):
 
         output = F.relu(self.bn1(self.conv1(x)))
+        output = self.pool(output)
         output = F.relu(self.bn2(self.conv2(output)))
+        output = self.pool(output)
         output = F.relu(self.bn3(self.conv3(output)))
         output = self.pool(output)
         output = output.view(-1, 30 * 357 * 637)

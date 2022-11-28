@@ -15,7 +15,7 @@ _WEATHER = ('Sunny', 'Cloudy', 'Rainy')
 _PUCPR = 'PUCPR'
 _BAD_WEATHER_PUCPR = 'Sunny'
 _BAD_DATES_PUCPR_SUNNY = ('2012-10-30', '2012-11-06', '2012-11-07')
-_CLASSES_MAP = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,101]
+_CLASSES_MAP = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,120]
 
 def _parse_args():
     """
@@ -50,36 +50,41 @@ def load_data(dataset_path, classes, none_threshold, num_workers=0, batch_size=1
     print(len(dataset))
     return DataLoader(dataset, num_workers=num_workers, batch_size=batch_size, shuffle=True, drop_last=True)
 
-def divide_dates_train_valid(camera_angle, percent_valid=0.3):
+def divide_dates_train_valid(in_camera_angle, percent_valid=0.2):
     """
     :return:
     two lists of : ['C:\\Users\\dazet\\Documents\\CSML\\final_project_data\\archive\\PKLot\\PUCPR\\date',]
     one for train, one for valid
     """
-    dataset_path = _BASEPATH + camera_angle + "\\"
+    angles = ('PUCPR', 'UFPR04', 'UFPR05')
+
+    if in_camera_angle != "all":
+        angles = (in_camera_angle,)
     all_paths = []
-    for weather in _WEATHER:
-        newpath = dataset_path + weather + "\\"
-        dates = os.listdir(newpath)
-        if camera_angle == _PUCPR and weather == _BAD_WEATHER_PUCPR:
-            #remove bad dates:
-            dates_set = set(dates)
-            bad_dates_set = set(_BAD_DATES_PUCPR_SUNNY)
-            set_of_dates = dates_set.difference(bad_dates_set)
-            dates = list(set_of_dates)
-        these_paths = [newpath + x for x in dates]
-        all_paths.extend(these_paths)
+    for camera_angle in angles:
+        dataset_path = _BASEPATH + camera_angle + "\\"
+        for weather in _WEATHER:
+            newpath = dataset_path + weather + "\\"
+            dates = os.listdir(newpath)
+            if camera_angle == _PUCPR and weather == _BAD_WEATHER_PUCPR:
+                #remove bad dates:
+                dates_set = set(dates)
+                bad_dates_set = set(_BAD_DATES_PUCPR_SUNNY)
+                set_of_dates = dates_set.difference(bad_dates_set)
+                dates = list(set_of_dates)
+            these_paths = [newpath + x for x in dates]
+            all_paths.extend(these_paths)
     total_days = len(all_paths)
     samples_valid = int(total_days * percent_valid)
     samples_train = total_days - samples_valid
     random.shuffle(all_paths)
 
-    # return all_paths[:samples_train], all_paths[samples_train:]
-    return all_paths, all_paths[samples_train:]
+    return all_paths[:samples_train], all_paths[samples_train:]
+    #return all_paths, all_paths[samples_train:]
 
 
 
-def train(camera_angle, chunks, lr):
+def train(camera_angle, chunks, lr, num_epochs):
     """
     doing something
     :return:
@@ -109,7 +114,7 @@ def train(camera_angle, chunks, lr):
     #train_data = load_data(train_section, _CLASSES_MAP, none_threshold, batch_size=1)
     #valid_data = load_data(valid_section, _CLASSES_MAP, none_threshold, batch_size=1)
 
-    num_epoch = 3
+    num_epoch = num_epochs
     global_step = 0
     train_data, valid_data = None, None
     for epoch in range(num_epoch):
@@ -125,6 +130,7 @@ def train(camera_angle, chunks, lr):
                 train_data = load_data(train_section[startidx: startidx + chunksize], _CLASSES_MAP, none_threshold,
                                        batch_size=1)
             startidx = startidx + chunksize
+
             for img, label, file_date in train_data:
                 img, label = img.to(device), label.to(device)
 
@@ -140,9 +146,10 @@ def train(camera_angle, chunks, lr):
                 loss_val.backward()
                 optimizer.step()
                 global_step += 1
-                print("finished " + file_date[0].split('\\')[-1] + " for epoch: " + str(epoch) +
-                      " global step: " + str(global_step))
+                # print("finished " + file_date[0].split('\\')[-1] + " for epoch: " + str(epoch) +
+                      # " global step: " + str(global_step))
             train_data = None
+            print("finished " + str(counter + 1) + " out of " + str(chunks) + " for epoch" + str(epoch))
             if startidx >= len(train_section):
                 break
 
@@ -189,4 +196,5 @@ if __name__ == "__main__":
     camera_angle = args.angle
     chunks = args.chunks
     lr = args.lr
-    train(camera_angle, chunks, lr)
+    num_epochs = args.num_epochs
+    train(camera_angle, chunks, lr, num_epochs)

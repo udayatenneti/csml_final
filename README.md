@@ -1,1 +1,1 @@
-# Deep Learning: Prediction number of parking spaces
+# Deep Learning: Predicting number of parking spaces
